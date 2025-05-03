@@ -1,13 +1,15 @@
-
-#[allow(unused_use, unused_const, duplicate_alias)]
+use std::string::{String, utf8};
+use std::error;
+use std::signer;
+/// SPV Registry Module
+/// 
+/// This module manages the registration and verification of Special Purpose Vehicles (SPVs)
+/// that are authorized to tokenize real-world assets on the CollateraX platform.
+/// 
+/// SPVs are legal entities that verify and hold real-world assets, ensuring compliance
+/// and proper custody. Only registered SPVs can create and verify new assets.
 module collaterax::spv_registry {
     use std::string::{String, utf8};
-    use std::error;
-    use std::signer;
-    use std::vector;
-    use iota::object::{Self, UID};
-    use iota::tx_context::{Self, TxContext};
-    use iota::table::{Self, Table};
     use std::vector;
     use std::error;
     use std::signer;
@@ -54,7 +56,6 @@ module collaterax::spv_registry {
     public struct SPVRegistry has key {
         id: UID,
         /// Table mapping SPV addresses to their info
-        id: UID,
         spvs: Table<address, SPVInfo>,
         /// List of all SPV addresses for enumeration
         spv_addresses: vector<address>,
