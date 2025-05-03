@@ -1,15 +1,16 @@
 #[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::staking {
     use std::string::{String, utf8};
-    use iota::error;
-    use iota::transfer;
+    use std::error;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
-    use iota::coin::{Self, Coin};
-    use iota::balance::{Self, Balance};
     use iota::clock::{Self, Clock};
+    use iota::transfer;
+    // Comment out these imports until we have the correct paths
+    // use iota::coin::{Self, Coin};
+    // use iota::balance::{Self, Balance};
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;

@@ -2,7 +2,7 @@
 module collaterax::governance_dao {
     use std::string::{String, utf8};
     use std::vector;
-    use iota::error;
+    use std::error;
     use iota::tx_context::{Self, TxContext};
     use iota::object::{Self, UID, ID};
     use iota::table::{Self, Table};

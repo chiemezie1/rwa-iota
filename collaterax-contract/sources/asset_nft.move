@@ -1,12 +1,12 @@
 #[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::asset_nft {
     use std::string::{String, utf8};
-    use iota::error;
-    use iota::transfer;
+    use std::error;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
+    use iota::transfer;
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
