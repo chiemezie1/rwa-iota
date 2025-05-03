@@ -1,3 +1,6 @@
+use std::string::{String, utf8};
+use std::error;
+use std::signer;
 /// Staking Module
 ///
 /// This module allows token holders to stake their tokens and earn rewards.
@@ -8,7 +11,7 @@ module collaterax::staking {
     use std::vector;
     use std::error;
     use std::signer;
-    use iota::object::{Self, Object, ID};
+    use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
     use collaterax::asset_ft::{Self, TokenRegistry};
@@ -23,9 +26,9 @@ module collaterax::staking {
     const E_LOCK_PERIOD_NOT_ENDED: u64 = 7;
 
     /// Represents a staking pool for a specific asset token
-    struct StakingPool has key, store {
+    public struct StakingPool has key, store {
         /// Unique identifier for the pool
-        id: ID,
+        id: UID,
         /// Asset ID of the token being staked
         asset_id: String,
         /// Total amount of tokens staked in the pool
@@ -45,7 +48,7 @@ module collaterax::staking {
     }
 
     /// Represents a stake by an individual
-    struct Stake has store {
+    public struct Stake has store, drop {
         /// Amount of tokens staked
         amount: u64,
         /// Timestamp when the stake was created or last updated
@@ -57,8 +60,10 @@ module collaterax::staking {
     }
 
     /// Global registry of all staking pools
-    struct PoolRegistry has key {
+    public struct PoolRegistry has key {
+        id: UID,
         /// Table mapping asset IDs to their staking pools
+        id: UID,
         pools: Table<String, StakingPool>,
         /// List of all asset IDs with pools for enumeration
         pool_asset_ids: vector<String>,
@@ -79,7 +84,7 @@ module collaterax::staking {
         };
         
         // Move the registry to the global storage
-        object::transfer(registry, admin_address);
+        object::share_object(registry);
     }
 
     /// Create a new staking pool
@@ -156,7 +161,7 @@ module collaterax::staking {
             let stake_duration_ms = current_time - stake.last_reward_time;
             let annual_ms: u64 = 365 * 24 * 60 * 60 * 1000; // milliseconds in a year
             let reward_rate = (pool.apy_basis_points as u128) * (stake.amount as u128) * (stake_duration_ms as u128);
-            let reward = (reward_rate / (10000 * annual_ms)) as u64; // Convert basis points to percentage
+            let reward = ((reward_rate / (10000u128u128 * (annual_ms as u128))) as u64; // Convert basis points to percentage
             
             stake.pending_rewards = stake.pending_rewards + reward;
             stake.amount = stake.amount + amount;
@@ -215,7 +220,7 @@ module collaterax::staking {
         let stake_duration_ms = current_time - stake.last_reward_time;
         let annual_ms: u64 = 365 * 24 * 60 * 60 * 1000; // milliseconds in a year
         let reward_rate = (pool.apy_basis_points as u128) * (stake.amount as u128) * (stake_duration_ms as u128);
-        let reward = (reward_rate / (10000 * annual_ms)) as u64; // Convert basis points to percentage
+        let reward = ((reward_rate / (10000u128u128 * (annual_ms as u128))) as u64; // Convert basis points to percentage
         
         stake.pending_rewards = stake.pending_rewards + reward;
         stake.amount = stake.amount - amount;
@@ -223,7 +228,7 @@ module collaterax::staking {
         
         // If the stake is now zero, remove it
         if (stake.amount == 0 && stake.pending_rewards == 0) {
-            table::remove(&mut pool.stakes, staker_address);
+            let Stake { amount: _, staked_at: _, last_reward_time: _, pending_rewards: _ } = table::remove(&mut pool.stakes, staker_address);
             
             // Remove the staker from the list
             let (found, index) = vector::index_of(&pool.staker_addresses, &staker_address);
@@ -262,9 +267,9 @@ module collaterax::staking {
         let stake_duration_ms = current_time - stake.last_reward_time;
         let annual_ms: u64 = 365 * 24 * 60 * 60 * 1000; // milliseconds in a year
         let reward_rate = (pool.apy_basis_points as u128) * (stake.amount as u128) * (stake_duration_ms as u128);
-        let reward = (reward_rate / (10000 * annual_ms)) as u64; // Convert basis points to percentage
+        let reward = ((reward_rate / (10000u128u128 * (annual_ms as u128))) as u64; // Convert basis points to percentage
         
-        let total_rewards = stake.pending_rewards + reward;
+        let _total_rewards = stake.pending_rewards + reward;
         
         // In a real implementation, this would transfer the rewards to the staker
         // For now, we just reset the pending rewards

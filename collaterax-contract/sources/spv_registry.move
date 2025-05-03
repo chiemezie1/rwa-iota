@@ -1,3 +1,6 @@
+use std::string::{String, utf8};
+use std::error;
+use std::signer;
 /// SPV Registry Module
 /// 
 /// This module manages the registration and verification of Special Purpose Vehicles (SPVs)
@@ -10,7 +13,7 @@ module collaterax::spv_registry {
     use std::vector;
     use std::error;
     use std::signer;
-    use iota::object::{Self, Object, ID};
+    use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
 
@@ -28,9 +31,9 @@ module collaterax::spv_registry {
     const STATUS_SUSPENDED: u64 = 3;
 
     /// Stores information about a registered SPV
-    struct SPVInfo has key, store {
+    public struct SPVInfo has key, store {
         /// Unique identifier for the SPV
-        id: ID,
+        id: UID,
         /// Address of the SPV
         address: address,
         /// Legal name of the SPV
@@ -50,7 +53,8 @@ module collaterax::spv_registry {
     }
 
     /// Global registry of SPVs
-    struct SPVRegistry has key {
+    public struct SPVRegistry has key {
+        id: UID,
         /// Table mapping SPV addresses to their info
         spvs: Table<address, SPVInfo>,
         /// List of all SPV addresses for enumeration
@@ -72,7 +76,7 @@ module collaterax::spv_registry {
         };
         
         // Move the registry to the global storage
-        object::transfer(registry, admin_address);
+        object::share_object(registry);
     }
 
     /// Register a new SPV

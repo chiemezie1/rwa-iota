@@ -1,3 +1,6 @@
+use std::string::{String, utf8};
+use std::error;
+use std::signer;
 /// DAO Governance Module
 ///
 /// This module implements a decentralized autonomous organization (DAO) for
@@ -11,7 +14,7 @@ module collaterax::governance_dao {
     use std::vector;
     use std::error;
     use std::signer;
-    use iota::object::{Self, Object, ID};
+    use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
     use collaterax::asset_ft::{Self, TokenRegistry};
@@ -42,9 +45,9 @@ module collaterax::governance_dao {
     const MIN_PROPOSAL_POWER: u64 = 1000;
 
     /// Represents a governance proposal
-    struct Proposal has key, store {
+    public struct Proposal has key, store {
         /// Unique identifier for the proposal
-        id: ID,
+        id: UID,
         /// Title of the proposal
         title: String,
         /// Description of the proposal
@@ -70,8 +73,10 @@ module collaterax::governance_dao {
     }
 
     /// Global registry of all proposals
-    struct ProposalRegistry has key {
+    public struct ProposalRegistry has key {
+        id: UID,
         /// Table mapping proposal IDs to proposals
+        id: UID,
         proposals: Table<ID, Proposal>,
         /// List of all proposal IDs for enumeration
         proposal_ids: vector<ID>,
@@ -99,7 +104,7 @@ module collaterax::governance_dao {
         };
         
         // Move the registry to the global storage
-        object::transfer(registry, admin_address);
+        object::share_object(registry);
     }
 
     /// Create a new proposal
@@ -145,7 +150,7 @@ module collaterax::governance_dao {
     /// Vote on a proposal
     public entry fun vote(
         voter: &signer,
-        proposal_id: ID,
+        proposal_id: UID,
         vote: bool,
         registry: &mut ProposalRegistry,
         token_registry: &TokenRegistry,
@@ -186,7 +191,7 @@ module collaterax::governance_dao {
 
     /// Finalize a proposal after the voting period ends
     public entry fun finalize_proposal(
-        proposal_id: ID,
+        proposal_id: UID,
         registry: &mut ProposalRegistry,
         ctx: &mut TxContext
     ) {
@@ -216,7 +221,7 @@ module collaterax::governance_dao {
     /// depending on the specific actions that proposals can take
     public entry fun execute_proposal(
         executor: &signer,
-        proposal_id: ID,
+        proposal_id: UID,
         registry: &mut ProposalRegistry,
         ctx: &mut TxContext
     ) {
@@ -252,7 +257,7 @@ module collaterax::governance_dao {
 
     /// Get proposal information
     public fun get_proposal_info(
-        proposal_id: ID,
+        proposal_id: UID,
         registry: &ProposalRegistry
     ): (String, String, String, address, u64, u64, u64, u64, u64, u64) {
         assert!(table::contains(&registry.proposals, proposal_id), error::not_found(E_PROPOSAL_NOT_FOUND));
@@ -275,7 +280,7 @@ module collaterax::governance_dao {
     /// Check if an address has voted on a proposal
     public fun has_voted(
         voter: address,
-        proposal_id: ID,
+        proposal_id: UID,
         registry: &ProposalRegistry
     ): bool {
         assert!(table::contains(&registry.proposals, proposal_id), error::not_found(E_PROPOSAL_NOT_FOUND));
@@ -287,7 +292,7 @@ module collaterax::governance_dao {
     /// Get an address's vote on a proposal
     public fun get_vote(
         voter: address,
-        proposal_id: ID,
+        proposal_id: UID,
         registry: &ProposalRegistry
     ): bool {
         assert!(table::contains(&registry.proposals, proposal_id), error::not_found(E_PROPOSAL_NOT_FOUND));

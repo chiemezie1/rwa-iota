@@ -1,3 +1,6 @@
+use std::string::{String, utf8};
+use std::error;
+use std::signer;
 /// Asset NFT Module
 ///
 /// This module manages the creation and transfer of non-fungible tokens (NFTs)
@@ -10,7 +13,7 @@ module collaterax::asset_nft {
     use std::vector;
     use std::error;
     use std::signer;
-    use iota::object::{Self, Object, ID};
+    use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
     use collaterax::spv_registry::{Self, SPVRegistry};
@@ -25,9 +28,9 @@ module collaterax::asset_nft {
     const E_INVALID_METADATA: u64 = 7;
 
     /// Represents a unique real-world asset as an NFT
-    struct AssetNFT has key, store {
+    public struct AssetNFT has key, store {
         /// Unique identifier for the asset
-        id: ID,
+        id: UID,
         /// Asset identifier (e.g., property address, deed number)
         asset_id: String,
         /// Type of asset (e.g., "real_estate", "artwork", "vehicle")
@@ -53,8 +56,10 @@ module collaterax::asset_nft {
     }
 
     /// Global store for all asset NFTs
-    struct AssetStore has key {
+    public struct AssetStore has key {
+        id: UID,
         /// Table mapping asset IDs to their NFTs
+        id: UID,
         assets: Table<String, AssetNFT>,
         /// List of all asset IDs for enumeration
         asset_ids: vector<String>,
@@ -75,7 +80,7 @@ module collaterax::asset_nft {
         };
         
         // Move the store to the global storage
-        object::transfer(store, admin_address);
+        object::share_object(store);
     }
 
     /// Create a new asset NFT
@@ -199,9 +204,9 @@ module collaterax::asset_nft {
         assert!(asset.burnable, error::invalid_argument(E_NOT_BURNABLE));
         
         // Remove the asset from the store
-        let AssetNFT {
-            id: _,
-            asset_id: _,
+        let AssetNFT { id,
+            id: id,
+            asset_id: id,
             asset_type: _,
             title: _,
             description: _,

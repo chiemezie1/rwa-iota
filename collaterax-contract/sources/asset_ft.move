@@ -1,3 +1,6 @@
+use std::string::{String, utf8};
+use std::error;
+use std::signer;
 /// Asset Fungible Token (FT) Module
 ///
 /// This module manages fungible tokens that represent fractional ownership
@@ -10,7 +13,7 @@ module collaterax::asset_ft {
     use std::vector;
     use std::error;
     use std::signer;
-    use iota::object::{Self, Object, ID};
+    use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
     use collaterax::spv_registry::{Self, SPVRegistry};
@@ -31,9 +34,9 @@ module collaterax::asset_ft {
     const BASIS_POINTS: u64 = 10000; // 100%
 
     /// Represents a fungible token for fractional ownership
-    struct AssetToken has key, store {
+    public struct AssetToken has key, store {
         /// Unique identifier for the token
-        id: ID,
+        id: UID,
         /// Associated asset ID (from the AssetNFT module)
         asset_id: String,
         /// Name of the token
@@ -55,8 +58,10 @@ module collaterax::asset_ft {
     }
 
     /// Global registry of all asset tokens
-    struct TokenRegistry has key {
+    public struct TokenRegistry has key {
+        id: UID,
         /// Table mapping asset IDs to their tokens
+        id: UID,
         tokens: Table<String, AssetToken>,
         /// List of all asset IDs with tokens for enumeration
         token_asset_ids: vector<String>,
@@ -77,7 +82,7 @@ module collaterax::asset_ft {
         };
         
         // Move the registry to the global storage
-        object::transfer(registry, admin_address);
+        object::share_object(registry);
     }
 
     /// Create a new asset token
