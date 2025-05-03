@@ -45,7 +45,7 @@ module collaterax::asset_ft {
     }
 
     // Initialize the token registry
-    public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
+    public entry fun init_registry(_admin: &signer, ctx: &mut TxContext) {
         let admin_address = tx_context::sender(ctx);
 
         let registry = TokenRegistry {
@@ -61,7 +61,7 @@ module collaterax::asset_ft {
 
     // Create a new token
     public entry fun create_token(
-        admin: &signer,
+        _admin: &signer,
         asset_id: vector<u8>,
         name: vector<u8>,
         symbol: vector<u8>,
@@ -102,7 +102,7 @@ module collaterax::asset_ft {
 
     // Mint tokens
     public entry fun mint(
-        admin: &signer,
+        _admin: &signer,
         asset_id: vector<u8>,
         amount: u64,
         recipient: address,
@@ -134,13 +134,13 @@ module collaterax::asset_ft {
 
     // Transfer tokens
     public entry fun transfer(
-        sender: &signer,
+        _sender: &signer,
         asset_id: vector<u8>,
         amount: u64,
         recipient: address,
         ctx: &mut TxContext
     ) {
-        let sender_address = tx_context::sender(ctx);
+        let _sender_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
@@ -157,12 +157,12 @@ module collaterax::asset_ft {
 
     // Burn tokens
     public entry fun burn(
-        owner: &signer,
+        _owner: &signer,
         asset_id: vector<u8>,
         amount: u64,
         ctx: &mut TxContext
     ) {
-        let owner_address = tx_context::sender(ctx);
+        let _owner_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero

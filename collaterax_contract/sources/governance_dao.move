@@ -58,7 +58,7 @@ module collaterax::governance_dao {
     }
 
     // Initialize the proposal registry
-    public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
+    public entry fun init_registry(_admin: &signer, ctx: &mut TxContext) {
         let admin_address = tx_context::sender(ctx);
 
         let registry = ProposalRegistry {
@@ -74,7 +74,7 @@ module collaterax::governance_dao {
 
     // Create a new proposal
     public entry fun create_proposal(
-        proposer: &signer,
+        _proposer: &signer,
         title: vector<u8>,
         description: vector<u8>,
         asset_id: vector<u8>,
@@ -123,7 +123,7 @@ module collaterax::governance_dao {
 
     // Vote on a proposal
     public entry fun vote(
-        voter: &signer,
+        _voter: &signer,
         proposal_addr: address,
         vote_for: bool,
         clock: &Clock,
@@ -202,7 +202,7 @@ module collaterax::governance_dao {
 
     // Execute an approved proposal
     public entry fun execute_proposal(
-        executor: &signer,
+        _executor: &signer,
         proposal_addr: address,
         clock: &Clock,
         ctx: &mut TxContext

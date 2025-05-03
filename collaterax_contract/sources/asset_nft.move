@@ -41,7 +41,7 @@ module collaterax::asset_nft {
     }
 
     // Initialize the asset store
-    public entry fun init_store(admin: &signer, ctx: &mut TxContext) {
+    public entry fun init_store(_admin: &signer, ctx: &mut TxContext) {
         let admin_address = tx_context::sender(ctx);
 
         let store = AssetStore {
@@ -57,7 +57,7 @@ module collaterax::asset_nft {
 
     // Mint a new NFT
     public entry fun mint_nft(
-        issuer: &signer,
+        _issuer: &signer,
         asset_id: vector<u8>,
         asset_type: vector<u8>,
         title: vector<u8>,
@@ -106,7 +106,7 @@ module collaterax::asset_nft {
 
     // Transfer an NFT to a new owner
     public entry fun transfer_nft(
-        owner: &signer,
+        _owner: &signer,
         asset_id: vector<u8>,
         recipient: address,
         ctx: &mut TxContext
@@ -136,7 +136,7 @@ module collaterax::asset_nft {
 
     // Burn an NFT
     public entry fun burn_nft(
-        owner: &signer,
+        _owner: &signer,
         asset_id: vector<u8>,
         ctx: &mut TxContext
     ) {

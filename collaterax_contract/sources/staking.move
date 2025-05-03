@@ -49,7 +49,7 @@ module collaterax::staking {
     }
 
     // Initialize the staking registry
-    public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
+    public entry fun init_registry(_admin: &signer, ctx: &mut TxContext) {
         let admin_address = tx_context::sender(ctx);
 
         let registry = PoolRegistry {
@@ -65,7 +65,7 @@ module collaterax::staking {
 
     // Create a new staking pool
     public entry fun create_pool(
-        admin: &signer,
+        _admin: &signer,
         asset_id: vector<u8>,
         apy_basis_points: u64,
         lock_period_ms: u64,
@@ -102,7 +102,7 @@ module collaterax::staking {
 
     // Stake tokens in a pool
     public entry fun stake(
-        staker: &signer,
+        _staker: &signer,
         asset_id: vector<u8>,
         amount: u64,
         clock: &Clock,
@@ -160,7 +160,7 @@ module collaterax::staking {
 
     // Unstake tokens from a pool
     public entry fun unstake(
-        staker: &signer,
+        _staker: &signer,
         asset_id: vector<u8>,
         amount: u64,
         clock: &Clock,
@@ -224,7 +224,7 @@ module collaterax::staking {
 
     // Claim rewards from a stake
     public entry fun claim_rewards(
-        staker: &signer,
+        _staker: &signer,
         asset_id: vector<u8>,
         ctx: &mut TxContext
     ) {
@@ -252,7 +252,7 @@ module collaterax::staking {
         let rewards = calculate_rewards(stake.amount, pool.apy_basis_points, elapsed_ms);
 
         // Get total rewards
-        let total_rewards = stake.pending_rewards + rewards;
+        let _total_rewards = stake.pending_rewards + rewards;
 
         // Reset pending rewards and update last reward time
         stake.pending_rewards = 0;

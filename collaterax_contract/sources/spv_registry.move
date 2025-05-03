@@ -44,7 +44,7 @@ module collaterax::spv_registry {
     }
 
     // Initialize the SPV registry
-    public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
+    public entry fun init_registry(_admin: &signer, ctx: &mut TxContext) {
         let admin_address = tx_context::sender(ctx);
 
         let registry = SPVRegistry {
@@ -60,7 +60,7 @@ module collaterax::spv_registry {
 
     // Register a new SPV
     public entry fun register_spv(
-        spv: &signer,
+        _spv: &signer,
         name: vector<u8>,
         description: vector<u8>,
         jurisdiction: vector<u8>,
@@ -97,7 +97,7 @@ module collaterax::spv_registry {
 
     // Approve an SPV
     public entry fun approve_spv(
-        admin: &signer,
+        _admin: &signer,
         spv_address: address,
         ctx: &mut TxContext
     ) {
@@ -121,7 +121,7 @@ module collaterax::spv_registry {
 
     // Reject an SPV
     public entry fun reject_spv(
-        admin: &signer,
+        _admin: &signer,
         spv_address: address,
         ctx: &mut TxContext
     ) {
@@ -144,7 +144,7 @@ module collaterax::spv_registry {
 
     // Suspend an SPV
     public entry fun suspend_spv(
-        admin: &signer,
+        _admin: &signer,
         spv_address: address,
         ctx: &mut TxContext
     ) {
@@ -187,7 +187,7 @@ module collaterax::spv_registry {
 
     // Update SPV information
     public entry fun update_spv_info(
-        spv: &signer,
+        _spv: &signer,
         name: vector<u8>,
         description: vector<u8>,
         jurisdiction: vector<u8>,
