@@ -1,30 +1,14 @@
+#[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::asset_ft {
-<<<<<<< HEAD
-    use std::signer;
-    use std::vector::{self};
-    use std::option::{self, Option};
-    use std::string::{self, String, utf8};
+    use std::string::{String, utf8};
     use iota::error;
-    use iota::tx_context::{self, TxContext};
-    use iota::object::{self, UID};
-    use iota::table::{self, Table};
-    use iota::coin::{self, Coin};
-    use iota::balance::{self, Balance};
-=======
-    use std::string;
-use std::error;
-use std::signer;;
-use std::error;
-use std::signer;::{String, utf8};
+    use iota::signer;
     use std::vector;
-    use std::error;
-    use std::signer;
-    use iota::object::{Self, UID, ID};
+    use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
     use iota::table::{Self, Table};
-    use collaterax::spv_registry::{Self, SPVRegistry};
-    use collaterax::asset_nft::{Self, AssetStore};
->>>>>>> b361d09 (update)
+    use iota::coin::{Self, Coin};
+    use iota::balance::{Self, Balance};
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -34,94 +18,86 @@ use std::signer;::{String, utf8};
     const E_ZERO_AMOUNT: u64 = 5;
     const E_REGISTRY_ALREADY_EXISTS: u64 = 6;
 
-<<<<<<< HEAD
-    // AssetToken data structure
-    public struct AssetToken has store {
-        id: UID,
-=======
-    /// Fee constants (in basis points, 1 bp = 0.01%)
+    // Fee constants (in basis points, 1 bp = 0.01%)
     const PLATFORM_FEE_BP: u64 = 50; // 0.5%
     const SPV_FEE_BP: u64 = 50; // 0.5%
     const BASIS_POINTS: u64 = 10000; // 100%
 
-    /// Represents a fungible token for fractional ownership
-    public public struct AssetToken has key, store {
-        /// Unique identifier for the token
+    // Asset token struct
+    public struct AssetToken has key, store {
         id: UID,
-        /// Associated asset ID (from the AssetNFT module)
->>>>>>> b361d09 (update)
         asset_id: String,
         name: String,
         symbol: String,
         decimals: u8,
         total_supply: u64,
         issuer: address,
+        admin: address,
         created_at: u64,
     }
 
-<<<<<<< HEAD
-    // Registry singleton for AssetTokens
-    public struct RegistryStore has key {
-        registry: Option<TokenRegistry>,
-    }
-
-    public struct TokenRegistry has store {
+    // Registry to store all tokens
+    public struct TokenRegistry has key {
         id: UID,
         admin: address,
-=======
-    /// Global registry of all asset tokens
-    public public struct TokenRegistry has key {
-        /// Table mapping asset IDs to their tokens
->>>>>>> b361d09 (update)
         tokens: Table<String, AssetToken>,
-        token_keys: vector<String>,
+        token_ids: vector<String>,
     }
 
-    /// Initialize the Token registry; only once
+    // Initialize the token registry
     public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
-        let admin_addr = signer::address_of(admin);
-        assert!(!object::exists<RegistryStore>(admin_addr), error::already_exists(E_REGISTRY_ALREADY_EXISTS));
+        let admin_address = signer::address_of(admin);
 
         let registry = TokenRegistry {
             id: object::new(ctx),
-            admin: admin_addr,
+            admin: admin_address,
             tokens: table::new(ctx),
-            token_keys: vector::empty(),
+            token_ids: vector::empty(),
         };
-        let store = RegistryStore { registry: option::some(registry) };
-        object::publish_object(store);
+
+        // Share the registry object so it can be accessed by anyone
+        object::share_object(registry);
     }
 
-    /// Create a new AssetToken
+    // Create a new token
     public entry fun create_token(
         admin: &signer,
-        asset_id_b: vector<u8>,
-        name_b: vector<u8>,
-        symbol_b: vector<u8>,
+        asset_id: vector<u8>,
+        name: vector<u8>,
+        symbol: vector<u8>,
         decimals: u8,
         total_supply: u64,
         ctx: &mut TxContext
     ) {
-        let admin_addr = signer::address_of(admin);
-        let store_ref = object::borrow_global_mut<RegistryStore>(admin_addr);
-        let registry = option::borrow_mut(&mut store_ref.registry);
-        assert!(registry.admin == admin_addr, error::permission_denied(E_NOT_AUTHORIZED));
+        let admin_address = signer::address_of(admin);
 
-        let asset_id_str = utf8(asset_id_b);
+        // Get the registry
+        let registry = borrow_registry();
+
+        // Check if the caller is the admin
+        assert!(admin_address == registry.admin, error::permission_denied(E_NOT_AUTHORIZED));
+
+        let asset_id_str = utf8(asset_id);
+
+        // Check if the token already exists
         assert!(!table::contains(&registry.tokens, asset_id_str), error::already_exists(E_TOKEN_ALREADY_EXISTS));
 
+        // Create the token
         let token = AssetToken {
             id: object::new(ctx),
             asset_id: asset_id_str,
-            name: utf8(name_b),
-            symbol: utf8(symbol_b),
+            name: utf8(name),
+            symbol: utf8(symbol),
             decimals,
             total_supply,
-            issuer: admin_addr,
+            issuer: admin_address,
+            admin: admin_address,
             created_at: tx_context::epoch_timestamp_ms(ctx),
         };
-        table::add(&mut registry.tokens, token.asset_id, token);
-        vector::push_back(&mut registry.token_keys, token.asset_id);
+
+        // Add the token to the registry
+        table::add(&mut registry.tokens, asset_id_str, token);
+        vector::push_back(&mut registry.token_ids, asset_id_str);
     }
 
     /// Mint coins of an existing AssetToken into recipient balance
