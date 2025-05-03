@@ -2,7 +2,7 @@
 module collaterax::staking {
     use std::string::{String, utf8};
     use iota::error;
-    use iota::signer;
+    use iota::transfer;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
@@ -49,7 +49,7 @@ module collaterax::staking {
 
     // Initialize the staking registry
     public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
 
         let registry = PoolRegistry {
             id: object::new(ctx),
@@ -59,7 +59,7 @@ module collaterax::staking {
         };
 
         // Share the registry object so it can be accessed by anyone
-        object::share_object(registry);
+        transfer::share_object(registry);
     }
 
     // Create a new staking pool
@@ -70,7 +70,7 @@ module collaterax::staking {
         lock_period_ms: u64,
         ctx: &mut TxContext
     ) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
 
         // Get the registry
         let registry = borrow_registry();
@@ -107,7 +107,7 @@ module collaterax::staking {
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        let staker_address = signer::address_of(staker);
+        let staker_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
@@ -165,7 +165,7 @@ module collaterax::staking {
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        let staker_address = signer::address_of(staker);
+        let staker_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
@@ -227,7 +227,7 @@ module collaterax::staking {
         asset_id: vector<u8>,
         ctx: &mut TxContext
     ) {
-        let staker_address = signer::address_of(staker);
+        let staker_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Get the registry
@@ -331,10 +331,11 @@ module collaterax::staking {
     fun borrow_registry(): &mut PoolRegistry {
         // In a real implementation, this would use a proper way to get the registry
         // For testing purposes, we'll use a dummy implementation
+        let ctx = tx_context::dummy();
         let dummy_registry = PoolRegistry {
-            id: object::new_for_testing(),
+            id: object::new(&mut ctx),
             admin: @0x1,
-            pools: table::new_for_testing(),
+            pools: table::new(&mut ctx),
             pool_asset_ids: vector::empty(),
         };
 

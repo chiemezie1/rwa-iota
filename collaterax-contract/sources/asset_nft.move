@@ -2,7 +2,7 @@
 module collaterax::asset_nft {
     use std::string::{String, utf8};
     use iota::error;
-    use iota::signer;
+    use iota::transfer;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
@@ -43,7 +43,7 @@ module collaterax::asset_nft {
 
     // Initialize the asset store
     public entry fun init_store(admin: &signer, ctx: &mut TxContext) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
 
         let store = AssetStore {
             id: object::new(ctx),
@@ -53,7 +53,7 @@ module collaterax::asset_nft {
         };
 
         // Share the store object so it can be accessed by anyone
-        object::share_object(store);
+        transfer::share_object(store);
     }
 
     // Mint a new NFT
@@ -68,7 +68,7 @@ module collaterax::asset_nft {
         burnable: bool,
         ctx: &mut TxContext
     ) {
-        let issuer_address = signer::address_of(issuer);
+        let issuer_address = tx_context::sender(ctx);
 
         // Get the store
         let store = borrow_store();
@@ -112,7 +112,7 @@ module collaterax::asset_nft {
         recipient: address,
         ctx: &mut TxContext
     ) {
-        let owner_address = signer::address_of(owner);
+        let owner_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Get the store
@@ -141,7 +141,7 @@ module collaterax::asset_nft {
         asset_id: vector<u8>,
         ctx: &mut TxContext
     ) {
-        let owner_address = signer::address_of(owner);
+        let owner_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Get the store
@@ -212,10 +212,11 @@ module collaterax::asset_nft {
     fun borrow_store(): &mut AssetStore {
         // In a real implementation, this would use a proper way to get the store
         // For testing purposes, we'll use a dummy implementation
+        let ctx = tx_context::dummy();
         let dummy_store = AssetStore {
-            id: object::new_for_testing(),
+            id: object::new(&mut ctx),
             admin: @0x1,
-            assets: table::new_for_testing(),
+            assets: table::new(&mut ctx),
             asset_ids: vector::empty(),
         };
 

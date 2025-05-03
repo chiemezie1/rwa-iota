@@ -1,13 +1,13 @@
 #[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::governance_dao {
     use std::string::{String, utf8};
-    use iota::error;
-    use iota::signer;
     use std::vector;
-    use iota::object::{Self, UID};
+    use iota::error;
     use iota::tx_context::{Self, TxContext};
+    use iota::object::{Self, UID, ID};
     use iota::table::{Self, Table};
     use iota::clock::{Self, Clock};
+    use iota::transfer;
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -60,7 +60,7 @@ module collaterax::governance_dao {
 
     // Initialize the proposal registry
     public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
 
         let registry = ProposalRegistry {
             id: object::new(ctx),
@@ -70,7 +70,7 @@ module collaterax::governance_dao {
         };
 
         // Share the registry object so it can be accessed by anyone
-        object::share_object(registry);
+        transfer::share_object(registry);
     }
 
     // Create a new proposal
@@ -83,7 +83,7 @@ module collaterax::governance_dao {
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        let proposer_address = signer::address_of(proposer);
+        let proposer_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Get the current time
@@ -117,7 +117,7 @@ module collaterax::governance_dao {
         let registry = borrow_registry();
 
         // Add the proposal to the registry
-        let proposal_addr = object::id_address(&proposal.id);
+        let proposal_addr = object::uid_to_address(&proposal.id);
         table::add(&mut registry.proposals, proposal_addr, proposal);
         vector::push_back(&mut registry.proposal_ids, proposal_addr);
     }
@@ -130,7 +130,7 @@ module collaterax::governance_dao {
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        let voter_address = signer::address_of(voter);
+        let voter_address = tx_context::sender(ctx);
 
         // Get the registry
         let registry = borrow_registry();
@@ -208,7 +208,7 @@ module collaterax::governance_dao {
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        let _executor_address = signer::address_of(executor);
+        let _executor_address = tx_context::sender(ctx);
 
         // Get the registry
         let registry = borrow_registry();
@@ -316,10 +316,11 @@ module collaterax::governance_dao {
     fun borrow_registry(): &mut ProposalRegistry {
         // In a real implementation, this would use a proper way to get the registry
         // For testing purposes, we'll use a dummy implementation
+        let ctx = tx_context::dummy();
         let dummy_registry = ProposalRegistry {
-            id: object::new_for_testing(),
+            id: object::new(&mut ctx),
             admin: @0x1,
-            proposals: table::new_for_testing(),
+            proposals: table::new(&mut ctx),
             proposal_ids: vector::empty(),
         };
 

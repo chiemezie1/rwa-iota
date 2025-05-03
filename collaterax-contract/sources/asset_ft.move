@@ -2,7 +2,7 @@
 module collaterax::asset_ft {
     use std::string::{String, utf8};
     use iota::error;
-    use iota::signer;
+    use iota::transfer;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
@@ -46,7 +46,7 @@ module collaterax::asset_ft {
 
     // Initialize the token registry
     public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
 
         let registry = TokenRegistry {
             id: object::new(ctx),
@@ -56,7 +56,7 @@ module collaterax::asset_ft {
         };
 
         // Share the registry object so it can be accessed by anyone
-        object::share_object(registry);
+        transfer::share_object(registry);
     }
 
     // Create a new token
@@ -69,7 +69,7 @@ module collaterax::asset_ft {
         total_supply: u64,
         ctx: &mut TxContext
     ) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
 
         // Get the registry
         let registry = borrow_registry();
@@ -108,7 +108,7 @@ module collaterax::asset_ft {
         recipient: address,
         ctx: &mut TxContext
     ) {
-        let admin_address = signer::address_of(admin);
+        let admin_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
@@ -140,7 +140,7 @@ module collaterax::asset_ft {
         recipient: address,
         ctx: &mut TxContext
     ) {
-        let sender_address = signer::address_of(sender);
+        let sender_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
@@ -162,7 +162,7 @@ module collaterax::asset_ft {
         amount: u64,
         ctx: &mut TxContext
     ) {
-        let owner_address = signer::address_of(owner);
+        let owner_address = tx_context::sender(ctx);
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
@@ -212,10 +212,11 @@ module collaterax::asset_ft {
     fun borrow_registry(): &mut TokenRegistry {
         // In a real implementation, this would use a proper way to get the registry
         // For testing purposes, we'll use a dummy implementation
+        let ctx = tx_context::dummy();
         let dummy_registry = TokenRegistry {
-            id: object::new_for_testing(),
+            id: object::new(&mut ctx),
             admin: @0x1,
-            tokens: table::new_for_testing(),
+            tokens: table::new(&mut ctx),
             token_ids: vector::empty(),
         };
 
