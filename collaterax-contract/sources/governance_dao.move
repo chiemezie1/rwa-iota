@@ -87,17 +87,17 @@ module collaterax::governance_dao {
     ) {
         let proposer_address = signer::address_of(proposer);
         let asset_id_str = utf8(asset_id);
-        
+
         // Get the current time
         let current_time = clock::timestamp_ms(clock);
-        
+
         // Check if proposer has enough voting power
         let voting_power = get_voting_power(proposer_address);
         assert!(voting_power >= MIN_PROPOSAL_POWER, error::permission_denied(E_INSUFFICIENT_VOTING_POWER));
-        
+
         // Ensure voting period is at least the minimum
         let voting_period = if (voting_period_ms < MIN_VOTING_PERIOD_MS) { MIN_VOTING_PERIOD_MS } else { voting_period_ms };
-        
+
         // Create the proposal
         let proposal = Proposal {
             id: object::new(ctx),
@@ -114,10 +114,10 @@ module collaterax::governance_dao {
             votes: table::new(ctx),
             voting_power: table::new(ctx),
         };
-        
+
         // Get the registry
         let registry = borrow_registry();
-        
+
         // Add the proposal to the registry
         let proposal_addr = object::id_address(&proposal.id);
         table::add(&mut registry.proposals, proposal_addr, proposal);
@@ -133,36 +133,36 @@ module collaterax::governance_dao {
         ctx: &mut TxContext
     ) {
         let voter_address = signer::address_of(voter);
-        
+
         // Get the registry
         let registry = borrow_registry();
-        
+
         // Check if the proposal exists
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         // Get the proposal
         let proposal = table::borrow_mut(&mut registry.proposals, proposal_addr);
-        
+
         // Check if the proposal is still active
         assert!(proposal.status == STATUS_ACTIVE, error::invalid_state(E_VOTING_PERIOD_ENDED));
-        
+
         // Get the current time
         let current_time = clock::timestamp_ms(clock);
-        
+
         // Check if the voting period has ended
         assert!(current_time <= proposal.voting_end_time, error::invalid_state(E_VOTING_PERIOD_ENDED));
-        
+
         // Check if the voter has already voted
         assert!(!table::contains(&proposal.votes, voter_address), error::already_exists(E_ALREADY_VOTED));
-        
+
         // Get the voter's voting power
         let voting_power = get_voting_power(voter_address);
         assert!(voting_power > 0, error::permission_denied(E_INSUFFICIENT_VOTING_POWER));
-        
+
         // Record the vote
         table::add(&mut proposal.votes, voter_address, vote_for);
         table::add(&mut proposal.voting_power, voter_address, voting_power);
-        
+
         // Update the vote counts
         if (vote_for) {
             proposal.for_votes = proposal.for_votes + voting_power;
@@ -179,22 +179,22 @@ module collaterax::governance_dao {
     ) {
         // Get the registry
         let registry = borrow_registry();
-        
+
         // Check if the proposal exists
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         // Get the proposal
         let proposal = table::borrow_mut(&mut registry.proposals, proposal_addr);
-        
+
         // Check if the proposal is still active
         assert!(proposal.status == STATUS_ACTIVE, error::invalid_state(E_PROPOSAL_ALREADY_EXECUTED));
-        
+
         // Get the current time
         let current_time = clock::timestamp_ms(clock);
-        
+
         // Check if the voting period has ended
         assert!(current_time > proposal.voting_end_time, error::invalid_state(E_VOTING_PERIOD_NOT_ENDED));
-        
+
         // Determine the outcome
         if (proposal.for_votes > proposal.against_votes) {
             proposal.status = STATUS_APPROVED;
@@ -211,29 +211,29 @@ module collaterax::governance_dao {
         ctx: &mut TxContext
     ) {
         let _executor_address = signer::address_of(executor);
-        
+
         // Get the registry
         let registry = borrow_registry();
-        
+
         // Check if the proposal exists
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         // Get the proposal
         let proposal = table::borrow_mut(&mut registry.proposals, proposal_addr);
-        
+
         // Check if the proposal is approved
         assert!(proposal.status == STATUS_APPROVED, error::invalid_state(E_PROPOSAL_REJECTED));
-        
+
         // Check if the proposal has already been executed
         assert!(proposal.executed_at == 0, error::invalid_state(E_PROPOSAL_ALREADY_EXECUTED));
-        
+
         // Get the current time
         let current_time = clock::timestamp_ms(clock);
-        
+
         // Mark the proposal as executed
         proposal.status = STATUS_EXECUTED;
         proposal.executed_at = current_time;
-        
+
         // Execute the proposal logic here
         // This would typically involve calling other modules or functions
         // For now, we just mark it as executed
@@ -245,9 +245,9 @@ module collaterax::governance_dao {
         proposal_addr: address
     ): (String, String, String, address, u64, u64, u64, u64, u64, u64) {
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         let proposal = table::borrow(&registry.proposals, proposal_addr);
-        
+
         (
             proposal.title,
             proposal.description,
@@ -268,9 +268,9 @@ module collaterax::governance_dao {
         proposal_addr: address
     ): (u64, u64) {
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         let proposal = table::borrow(&registry.proposals, proposal_addr);
-        
+
         (proposal.for_votes, proposal.against_votes)
     }
 
@@ -281,9 +281,9 @@ module collaterax::governance_dao {
         voter: address
     ): bool {
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         let proposal = table::borrow(&registry.proposals, proposal_addr);
-        
+
         table::contains(&proposal.votes, voter)
     }
 
@@ -294,11 +294,11 @@ module collaterax::governance_dao {
         voter: address
     ): bool {
         assert!(table::contains(&registry.proposals, proposal_addr), error::not_found(E_PROPOSAL_NOT_FOUND));
-        
+
         let proposal = table::borrow(&registry.proposals, proposal_addr);
-        
+
         assert!(table::contains(&proposal.votes, voter), error::not_found(E_NOT_AUTHORIZED));
-        
+
         *table::borrow(&proposal.votes, voter)
     }
 
@@ -316,8 +316,15 @@ module collaterax::governance_dao {
 
     // Helper function to borrow the registry
     fun borrow_registry(): &mut ProposalRegistry {
-        // In a real implementation, this would use object::borrow_global_mut
-        // For now, we'll just return a placeholder
-        abort 0 // This will be replaced in the actual implementation
+        // In a real implementation, this would use a proper way to get the registry
+        // For testing purposes, we'll use a dummy implementation
+        let dummy_registry = ProposalRegistry {
+            id: object::new_for_testing(),
+            admin: @0x1,
+            proposals: table::new_for_testing(),
+            proposal_ids: vector::empty(),
+        };
+
+        &mut dummy_registry
     }
 }
