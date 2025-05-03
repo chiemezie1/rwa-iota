@@ -8,11 +8,11 @@ A Move-based smart contract platform for tokenizing real-world assets (RWA) on t
 # Build the contracts
 iota move build
 
-# Run the tests
-iota move test
+# Run the tests (using the test script)
+./run_tests.sh
 
-# Deploy to testnet
-iota move publish
+# Deploy to testnet (using the deployment script)
+./deploy.sh <admin_address> [treasury_address]
 ```
 
 ## 🏗️ What is CollateraX?
@@ -68,10 +68,31 @@ collaterax-contract/
 
 ## 🧪 Testing
 
-Run the comprehensive test suite:
+### Quick Test Run
+
+The easiest way to run all tests is using the provided script:
 
 ```bash
+./run_tests.sh
+```
+
+This script will:
+- Build the contracts
+- Run the main test suite
+- Run the edge case test suite
+- Display results with clear formatting
+
+### Manual Testing
+
+Alternatively, you can run tests manually:
+
+```bash
+# Run all tests
 iota move test
+
+# Run specific test modules
+iota move test collaterax::collaterax_tests
+iota move test collaterax::collaterax_edge_tests
 ```
 
 The test suite covers:
@@ -80,32 +101,51 @@ The test suite covers:
 - Fungible token creation and trading
 - Governance proposal creation and voting
 - Token staking and reward distribution
+- Edge cases and error conditions
 
 ## 🚀 Deployment
 
-### 1. Build the contracts
+### Automated Deployment
+
+The easiest way to deploy is using the provided script:
+
+```bash
+./deploy.sh <admin_address> [treasury_address]
+```
+
+This script will:
+- Build the contracts
+- Publish them to the IOTA testnet
+- Initialize all contract modules
+- Save deployment information to a JSON file
+
+### Manual Deployment Steps
+
+If you prefer to deploy manually, follow these steps:
+
+#### 1. Build the contracts
 
 ```bash
 iota move build
 ```
 
-### 2. Create a wallet (if you don't have one)
+#### 2. Create a wallet (if you don't have one)
 
 ```bash
 iota wallet new
 ```
 
-### 3. Get testnet tokens
+#### 3. Get testnet tokens
 
 Visit the [IOTA Testnet Faucet](https://faucet.testnet.shimmer.network/)
 
-### 4. Publish the package
+#### 4. Publish the package
 
 ```bash
 iota move publish
 ```
 
-### 5. Initialize the contracts
+#### 5. Initialize the contracts
 
 ```bash
 # Set your admin address
