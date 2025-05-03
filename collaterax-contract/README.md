@@ -5,6 +5,9 @@ A Move-based smart contract platform for tokenizing real-world assets (RWA) on t
 ## 📋 Quick Start
 
 ```bash
+# Fix common issues in the contracts (if needed)
+./fix_contracts.sh
+
 # Build the contracts
 iota move build
 
@@ -65,6 +68,32 @@ collaterax-contract/
    git clone https://github.com/yourusername/collaterax.git
    cd collaterax/collaterax-contract
    ```
+
+## 🛠️ Fixing Common Issues
+
+If you encounter build errors, you can use the provided fix script:
+
+```bash
+./fix_contracts.sh
+```
+
+This script addresses common issues in the Move contracts:
+- Missing imports for `std::error` and `std::signer`
+- Incorrect usage of object IDs
+- Type mismatches in mathematical operations
+- Missing visibility modifiers on struct declarations
+- Other common syntax issues
+
+After running the fix script, try building the contracts again:
+
+```bash
+iota move build
+```
+
+For more detailed troubleshooting help, refer to the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) guide, which provides:
+- Specific error messages and their solutions
+- Manual fixes for complex issues
+- Additional resources for getting help
 
 ## 🧪 Testing
 
