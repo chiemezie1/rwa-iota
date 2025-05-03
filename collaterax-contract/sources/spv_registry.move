@@ -1,4 +1,5 @@
 module collaterax::spv_registry {
+<<<<<<< HEAD
     use std::signer;
     use std::vector::{self};
     use std::option::{self, Option};
@@ -7,6 +8,19 @@ module collaterax::spv_registry {
     use iota::tx_context::{self, TxContext};
     use iota::object::{self, UID};
     use iota::table::{self, Table};
+=======
+    use std::string;
+use std::error;
+use std::signer;;
+use std::error;
+use std::signer;::{String, utf8};
+    use std::vector;
+    use std::error;
+    use std::signer;
+    use iota::object::{Self, UID, ID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::table::{Self, Table};
+>>>>>>> b361d09 (update)
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -20,9 +34,17 @@ module collaterax::spv_registry {
     const STATUS_REJECTED: u64 = 2;
     const STATUS_SUSPENDED: u64 = 3;
 
+<<<<<<< HEAD
     // SPV Information
     public struct SPVInfo has store {
         id: UID,
+=======
+    /// Stores information about a registered SPV
+    public public struct SPVInfo has key, store {
+        /// Unique identifier for the SPV
+        id: UID,
+        /// Address of the SPV
+>>>>>>> b361d09 (update)
         address: address,
         status: u64,
         name: String,
@@ -34,6 +56,7 @@ module collaterax::spv_registry {
         verification_date: u64,
     }
 
+<<<<<<< HEAD
     // Registry singleton storing SPVs
     public struct RegistryStore has key {
         registry: Option<SPVRegistry>,
@@ -42,6 +65,11 @@ module collaterax::spv_registry {
     public struct SPVRegistry has store {
         id: UID,
         admin: address,
+=======
+    /// Global registry of SPVs
+    public public struct SPVRegistry has key {
+        /// Table mapping SPV addresses to their info
+>>>>>>> b361d09 (update)
         spvs: Table<address, SPVInfo>,
         addresses: vector<address>,
     }

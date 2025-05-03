@@ -1,4 +1,5 @@
 module collaterax::asset_nft {
+<<<<<<< HEAD
     use std::signer;
     use std::vector::{self};
     use std::option::{self, Option};
@@ -7,6 +8,20 @@ module collaterax::asset_nft {
     use iota::tx_context::{self, TxContext};
     use iota::object::{self, UID};
     use iota::table::{self, Table};
+=======
+    use std::string;
+use std::error;
+use std::signer;;
+use std::error;
+use std::signer;::{String, utf8};
+    use std::vector;
+    use std::error;
+    use std::signer;
+    use iota::object::{Self, UID, ID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::table::{Self, Table};
+    use collaterax::spv_registry::{Self, SPVRegistry};
+>>>>>>> b361d09 (update)
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -17,9 +32,17 @@ module collaterax::asset_nft {
     const E_NOT_BURNABLE: u64 = 6;
     const E_INVALID_METADATA: u64 = 7;
 
+<<<<<<< HEAD
     // Asset NFT definition
     public struct AssetNFT has store {
         id: UID,
+=======
+    /// Represents a unique real-world asset as an NFT
+    public public struct AssetNFT has key, store {
+        /// Unique identifier for the asset
+        id: UID,
+        /// Asset identifier (e.g., property address, deed number)
+>>>>>>> b361d09 (update)
         asset_id: String,
         asset_type: String,
         title: String,
@@ -33,6 +56,7 @@ module collaterax::asset_nft {
         last_updated: u64,
     }
 
+<<<<<<< HEAD
     // Registry storage for NFTs
     public struct RegistryStore has key {
         registry: Option<AssetStore>,
@@ -41,6 +65,11 @@ module collaterax::asset_nft {
     public struct AssetStore has store {
         id: UID,
         admin: address,
+=======
+    /// Global store for all asset NFTs
+    public public struct AssetStore has key {
+        /// Table mapping asset IDs to their NFTs
+>>>>>>> b361d09 (update)
         assets: Table<String, AssetNFT>,
         asset_keys: vector<String>,
     }

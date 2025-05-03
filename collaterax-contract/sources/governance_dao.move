@@ -1,4 +1,5 @@
 module collaterax::governance_dao {
+<<<<<<< HEAD
     use std::signer;
     use std::vector::{self};
     use std::option::{self, Option};
@@ -8,6 +9,20 @@ module collaterax::governance_dao {
     use iota::object::{self, UID};
     use iota::table::{self, Table};
     use iota::clock::{self, Clock};
+=======
+    use std::string;
+use std::error;
+use std::signer;;
+use std::error;
+use std::signer;::{String, utf8};
+    use std::vector;
+    use std::error;
+    use std::signer;
+    use iota::object::{Self, UID, ID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::table::{Self, Table};
+    use collaterax::asset_ft::{Self, TokenRegistry};
+>>>>>>> b361d09 (update)
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -29,9 +44,20 @@ module collaterax::governance_dao {
     // Voting threshold
     const MIN_PROPOSAL_POWER: u64 = 1_000_000;
 
+<<<<<<< HEAD
     // Proposal data structure
     public struct Proposal has store {
         id: UID,
+=======
+    /// Minimum voting power required to create a proposal (in tokens)
+    const MIN_PROPOSAL_POWER: u64 = 1000;
+
+    /// Represents a governance proposal
+    public public struct Proposal has key, store {
+        /// Unique identifier for the proposal
+        id: UID,
+        /// Title of the proposal
+>>>>>>> b361d09 (update)
         title: String,
         description: String,
         asset_id: String,
@@ -46,6 +72,7 @@ module collaterax::governance_dao {
         voting_power: Table<address, u64>,
     }
 
+<<<<<<< HEAD
     // Registry singleton for proposals
     public struct RegistryStore has key {
         registry: Option<ProposalRegistry>,
@@ -53,6 +80,15 @@ module collaterax::governance_dao {
 
     public struct ProposalRegistry has store {
         id: UID,
+=======
+    /// Global registry of all proposals
+    public public struct ProposalRegistry has key {
+        /// Table mapping proposal IDs to proposals
+        proposals: Table<ID, Proposal>,
+        /// List of all proposal IDs for enumeration
+        proposal_ids: vector<ID>,
+        /// Address of the admin
+>>>>>>> b361d09 (update)
         admin: address,
         proposals: Table<address, Proposal>,
         addresses: vector<address>,
@@ -116,9 +152,17 @@ module collaterax::governance_dao {
     /// Vote on an active proposal
     public entry fun vote(
         voter: &signer,
+<<<<<<< HEAD
         prop_addr: address,
         in_favor: bool,
         clock: &Clock
+=======
+        proposal_id: UID,
+        vote: bool,
+        registry: &mut ProposalRegistry,
+        token_registry: &TokenRegistry,
+        ctx: &mut TxContext
+>>>>>>> b361d09 (update)
     ) {
         let voter_addr = signer::address_of(voter);
         let store_ref = object::borrow_global_mut<RegistryStore>(voter_addr);
@@ -143,8 +187,14 @@ module collaterax::governance_dao {
 
     /// Finalize a proposal after voting period
     public entry fun finalize_proposal(
+<<<<<<< HEAD
         prop_addr: address,
         clock: &Clock
+=======
+        proposal_id: UID,
+        registry: &mut ProposalRegistry,
+        ctx: &mut TxContext
+>>>>>>> b361d09 (update)
     ) {
         let caller = signer::borrow_signer();
         let caller_addr = signer::address_of(&caller);
@@ -164,8 +214,14 @@ module collaterax::governance_dao {
     /// Execute an approved proposal
     public entry fun execute_proposal(
         executor: &signer,
+<<<<<<< HEAD
         prop_addr: address,
         clock: &Clock
+=======
+        proposal_id: UID,
+        registry: &mut ProposalRegistry,
+        ctx: &mut TxContext
+>>>>>>> b361d09 (update)
     ) {
         let executor_addr = signer::address_of(executor);
         let store_ref = object::borrow_global_mut<RegistryStore>(executor_addr);
@@ -200,9 +256,58 @@ module collaterax::governance_dao {
         registry.addresses
     }
 
+<<<<<<< HEAD
     // Placeholder for future voting power logic
     fun get_voting_power(_user: address): u64 {
         // Integrate token-based power here
         1_000_000
+=======
+    /// Get proposal information
+    public fun get_proposal_info(
+        proposal_id: UID,
+        registry: &ProposalRegistry
+    ): (String, String, String, address, u64, u64, u64, u64, u64, u64) {
+        assert!(table::contains(&registry.proposals, proposal_id), error::not_found(E_PROPOSAL_NOT_FOUND));
+        
+        let proposal = table::borrow(&registry.proposals, proposal_id);
+        (
+            proposal.title,
+            proposal.description,
+            proposal.asset_id,
+            proposal.proposer,
+            proposal.for_votes,
+            proposal.against_votes,
+            proposal.status,
+            proposal.created_at,
+            proposal.voting_end_time,
+            proposal.executed_at
+        )
+    }
+
+    /// Check if an address has voted on a proposal
+    public fun has_voted(
+        voter: address,
+        proposal_id: UID,
+        registry: &ProposalRegistry
+    ): bool {
+        assert!(table::contains(&registry.proposals, proposal_id), error::not_found(E_PROPOSAL_NOT_FOUND));
+        
+        let proposal = table::borrow(&registry.proposals, proposal_id);
+        table::contains(&proposal.votes, voter)
+    }
+
+    /// Get an address's vote on a proposal
+    public fun get_vote(
+        voter: address,
+        proposal_id: UID,
+        registry: &ProposalRegistry
+    ): bool {
+        assert!(table::contains(&registry.proposals, proposal_id), error::not_found(E_PROPOSAL_NOT_FOUND));
+        
+        let proposal = table::borrow(&registry.proposals, proposal_id);
+        assert!(table::contains(&proposal.votes, voter), error::not_found(E_NOT_AUTHORIZED));
+        
+        *table::borrow(&proposal.votes, voter)
+>>>>>>> b361d09 (update)
     }
 }

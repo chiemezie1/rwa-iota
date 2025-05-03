@@ -1,4 +1,5 @@
 module collaterax::asset_ft {
+<<<<<<< HEAD
     use std::signer;
     use std::vector::{self};
     use std::option::{self, Option};
@@ -9,6 +10,21 @@ module collaterax::asset_ft {
     use iota::table::{self, Table};
     use iota::coin::{self, Coin};
     use iota::balance::{self, Balance};
+=======
+    use std::string;
+use std::error;
+use std::signer;;
+use std::error;
+use std::signer;::{String, utf8};
+    use std::vector;
+    use std::error;
+    use std::signer;
+    use iota::object::{Self, UID, ID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::table::{Self, Table};
+    use collaterax::spv_registry::{Self, SPVRegistry};
+    use collaterax::asset_nft::{Self, AssetStore};
+>>>>>>> b361d09 (update)
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -18,9 +34,22 @@ module collaterax::asset_ft {
     const E_ZERO_AMOUNT: u64 = 5;
     const E_REGISTRY_ALREADY_EXISTS: u64 = 6;
 
+<<<<<<< HEAD
     // AssetToken data structure
     public struct AssetToken has store {
         id: UID,
+=======
+    /// Fee constants (in basis points, 1 bp = 0.01%)
+    const PLATFORM_FEE_BP: u64 = 50; // 0.5%
+    const SPV_FEE_BP: u64 = 50; // 0.5%
+    const BASIS_POINTS: u64 = 10000; // 100%
+
+    /// Represents a fungible token for fractional ownership
+    public public struct AssetToken has key, store {
+        /// Unique identifier for the token
+        id: UID,
+        /// Associated asset ID (from the AssetNFT module)
+>>>>>>> b361d09 (update)
         asset_id: String,
         name: String,
         symbol: String,
@@ -30,6 +59,7 @@ module collaterax::asset_ft {
         created_at: u64,
     }
 
+<<<<<<< HEAD
     // Registry singleton for AssetTokens
     public struct RegistryStore has key {
         registry: Option<TokenRegistry>,
@@ -38,6 +68,11 @@ module collaterax::asset_ft {
     public struct TokenRegistry has store {
         id: UID,
         admin: address,
+=======
+    /// Global registry of all asset tokens
+    public public struct TokenRegistry has key {
+        /// Table mapping asset IDs to their tokens
+>>>>>>> b361d09 (update)
         tokens: Table<String, AssetToken>,
         token_keys: vector<String>,
     }
