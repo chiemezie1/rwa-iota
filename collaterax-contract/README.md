@@ -71,20 +71,28 @@ collaterax-contract/
 
 ## 🛠️ Fixing Common Issues
 
-If you encounter build errors, you can use the provided fix script:
+If you encounter build errors, you can use the provided fix scripts:
 
 ```bash
+# General fixes for all contracts
 ./fix_contracts.sh
+
+# Specific fixes for individual modules
+./fix_governance_dao.sh  # Fixes governance_dao.move
+./fix_spv_registry.sh    # Fixes spv_registry.move
+./fix_remaining.sh       # Fixes staking.move, asset_nft.move, and asset_ft.move
 ```
 
-This script addresses common issues in the Move contracts:
-- Missing imports for `std::error` and `std::signer`
-- Incorrect usage of object IDs
+These scripts address common issues in the Move contracts:
+- Missing imports for `std::error`, `std::signer`, and `std::string`
+- Incorrect usage of object IDs and UIDs
 - Type mismatches in mathematical operations
 - Missing visibility modifiers on struct declarations
-- Other common syntax issues
+- Duplicate public modifiers
+- Incorrect object transfer functions
+- Other syntax and type issues
 
-After running the fix script, try building the contracts again:
+After running the fix scripts, try building the contracts again:
 
 ```bash
 iota move build
