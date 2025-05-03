@@ -1,12 +1,12 @@
-#[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::asset_nft {
-    use std::string::{String, utf8};
-    use std::error;
     use std::signer;
-    use std::vector;
-    use iota::object::{Self, UID};
-    use iota::tx_context::{Self, TxContext};
-    use iota::table::{Self, Table};
+    use std::vector::{self};
+    use std::option::{self, Option};
+    use std::string::{self, String, utf8};
+    use iota::error;
+    use iota::tx_context::{self, TxContext};
+    use iota::object::{self, UID};
+    use iota::table::{self, Table};
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
@@ -17,8 +17,8 @@ module collaterax::asset_nft {
     const E_NOT_BURNABLE: u64 = 6;
     const E_INVALID_METADATA: u64 = 7;
 
-    // Asset NFT struct
-    public struct AssetNFT has key, store {
+    // Asset NFT definition
+    public struct AssetNFT has store {
         id: UID,
         asset_id: String,
         asset_type: String,
@@ -33,40 +33,125 @@ module collaterax::asset_nft {
         last_updated: u64,
     }
 
-    // Store to manage all assets
-    public struct AssetStore has key {
+    // Registry storage for NFTs
+    public struct RegistryStore has key {
+        registry: Option<AssetStore>,
+    }
+
+    public struct AssetStore has store {
         id: UID,
         admin: address,
         assets: Table<String, AssetNFT>,
-        asset_ids: vector<String>,
+        asset_keys: vector<String>,
     }
 
-    // Initialize the asset store
+    /// Initialize the NFT store; only once
     public entry fun init_store(admin: &signer, ctx: &mut TxContext) {
-        let admin_address = signer::address_of(admin);
+        let admin_addr = signer::address_of(admin);
+        assert!(!object::exists<RegistryStore>(admin_addr), error::already_exists(E_STORE_ALREADY_EXISTS));
 
         let store = AssetStore {
             id: object::new(ctx),
-            admin: admin_address,
+            admin: admin_addr,
             assets: table::new(ctx),
-            asset_ids: vector::empty(),
+            asset_keys: vector::empty(),
         };
-
-        // Share the store object so it can be accessed by anyone
-        object::share_object(store);
+        let registry = RegistryStore { registry: option::some(store) };
+        object::publish_object(registry);
     }
 
-    // Helper function to borrow the store
-    fun borrow_store(): &mut AssetStore {
-        // In a real implementation, this would use a proper way to get the store
-        // For testing purposes, we'll use a dummy implementation
-        let dummy_store = AssetStore {
-            id: object::new_for_testing(),
-            admin: @0x1,
-            assets: table::new_for_testing(),
-            asset_ids: vector::empty(),
-        };
+    /// Mint a new NFT
+    public entry fun mint_nft(
+        issuer: &signer,
+        asset_id_b: vector<u8>,
+        asset_type_b: vector<u8>,
+        title_b: vector<u8>,
+        desc_b: vector<u8>,
+        metadata_b: vector<u8>,
+        transferable: bool,
+        burnable: bool,
+        ctx: &mut TxContext
+    ) {
+        let issuer_addr = signer::address_of(issuer);
+        let store_ref = object::borrow_global_mut<RegistryStore>(issuer_addr);
+        let store = option::borrow_mut(&mut store_ref.registry);
+        assert!(store.admin == issuer_addr, error::permission_denied(E_NOT_AUTHORIZED));
 
-        &mut dummy_store
+        let asset_id = utf8(asset_id_b);
+        assert!(!table::contains(&store.assets, asset_id), error::already_exists(E_ASSET_ALREADY_EXISTS));
+
+        let now = tx_context::epoch_timestamp_ms(ctx);
+        let nft = AssetNFT {
+            id: object::new(ctx),
+            asset_id: asset_id.clone(),
+            asset_type: utf8(asset_type_b),
+            title: utf8(title_b),
+            description: utf8(desc_b),
+            metadata: utf8(metadata_b),
+            owner: issuer_addr,
+            issuer: issuer_addr,
+            transferable,
+            burnable,
+            created_at: now,
+            last_updated: now,
+        };
+        table::add(&mut store.assets, asset_id.clone(), nft);
+        vector::push_back(&mut store.asset_keys, asset_id);
+    }
+
+    /// Transfer NFT to a new owner
+    public entry fun transfer_nft(
+        sender: &signer,
+        asset_id: String,
+        recipient: address
+    ) {
+        let sender_addr = signer::address_of(sender);
+        let store_ref = object::borrow_global_mut<RegistryStore>(sender_addr);
+        let store = option::borrow_mut(&mut store_ref.registry);
+        assert!(table::contains(&store.assets, asset_id), error::not_found(E_ASSET_NOT_FOUND));
+
+        let nft_ref = table::borrow_mut(&mut store.assets, asset_id.clone());
+        assert!(nft_ref.owner == sender_addr, error::permission_denied(E_NOT_OWNER));
+        assert!(nft_ref.transferable, error::invalid_state(E_NOT_AUTHORIZED));
+
+        nft_ref.owner = recipient;
+        nft_ref.last_updated = tx_context::epoch_timestamp_ms(&mut TxContext::new());
+    }
+
+    /// Burn an NFT if allowed
+    public entry fun burn_nft(
+        owner: &signer,
+        asset_id: String
+    ) {
+        let owner_addr = signer::address_of(owner);
+        let store_ref = object::borrow_global_mut<RegistryStore>(owner_addr);
+        let store = option::borrow_mut(&mut store_ref.registry);
+        assert!(table::contains(&store.assets, asset_id), error::not_found(E_ASSET_NOT_FOUND));
+
+        let nft_ref = table::borrow(&store.assets, asset_id.clone());
+        assert!(nft_ref.owner == owner_addr, error::permission_denied(E_NOT_OWNER));
+        assert!(nft_ref.burnable, error::invalid_state(E_NOT_BURNABLE));
+
+        table::remove(&mut store.assets, asset_id.clone());
+        // Optionally remove key from asset_keys vector
+    }
+
+    /// Get NFT metadata
+    public fun get_nft(asset_id: String): AssetNFT {
+        let viewer = signer::borrow_signer();
+        let viewer_addr = signer::address_of(&viewer);
+        let store_ref = object::borrow_global<RegistryStore>(viewer_addr);
+        let store = option::borrow(&store_ref.registry);
+        assert!(table::contains(&store.assets, asset_id), error::not_found(E_ASSET_NOT_FOUND));
+        table::borrow(&store.assets, asset_id)
+    }
+
+    /// List all NFT IDs
+    public fun list_nfts(): vector<String> {
+        let viewer = signer::borrow_signer();
+        let viewer_addr = signer::address_of(&viewer);
+        let store_ref = object::borrow_global<RegistryStore>(viewer_addr);
+        let store = option::borrow(&store_ref.registry);
+        store.asset_keys
     }
 }

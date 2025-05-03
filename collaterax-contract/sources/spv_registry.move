@@ -1,19 +1,18 @@
-#[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::spv_registry {
-    use std::string::{String, utf8};
+    use std::signer;
+    use std::vector::{self};
+    use std::option::{self, Option};
+    use std::string::{self, String, utf8};
     use iota::error;
-    use iota::signer;
-    use std::vector;
-    use iota::object::{Self, UID};
-    use iota::tx_context::{Self, TxContext};
-    use iota::table::{Self, Table};
+    use iota::tx_context::{self, TxContext};
+    use iota::object::{self, UID};
+    use iota::table::{self, Table};
 
     // Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
     const E_SPV_ALREADY_REGISTERED: u64 = 2;
     const E_SPV_NOT_FOUND: u64 = 3;
     const E_REGISTRY_ALREADY_EXISTS: u64 = 4;
-    const E_INVALID_STATUS: u64 = 5;
 
     // SPV status constants
     const STATUS_PENDING: u64 = 0;
@@ -21,8 +20,8 @@ module collaterax::spv_registry {
     const STATUS_REJECTED: u64 = 2;
     const STATUS_SUSPENDED: u64 = 3;
 
-    // SPV information struct
-    public struct SPVInfo has key, store {
+    // SPV Information
+    public struct SPVInfo has store {
         id: UID,
         address: address,
         status: u64,
@@ -35,207 +34,129 @@ module collaterax::spv_registry {
         verification_date: u64,
     }
 
-    // Registry to store all SPVs
-    public struct SPVRegistry has key {
+    // Registry singleton storing SPVs
+    public struct RegistryStore has key {
+        registry: Option<SPVRegistry>,
+    }
+
+    public struct SPVRegistry has store {
         id: UID,
         admin: address,
         spvs: Table<address, SPVInfo>,
-        spv_addresses: vector<address>, // Store SPV addresses for iteration
+        addresses: vector<address>,
     }
 
-    // Initialize the SPV registry
+    // Initialize RegistryStore
     public entry fun init_registry(admin: &signer, ctx: &mut TxContext) {
-        let admin_address = signer::address_of(admin);
+        let addr = signer::address_of(admin);
+        assert!(!object::exists<RegistryStore>(addr), error::already_exists(E_REGISTRY_ALREADY_EXISTS));
 
         let registry = SPVRegistry {
             id: object::new(ctx),
-            admin: admin_address,
+            admin: addr,
             spvs: table::new(ctx),
-            spv_addresses: vector::empty(),
+            addresses: vector::empty(),
         };
-
-        // Share the registry object so it can be accessed by anyone
-        object::share_object(registry);
+        let store = RegistryStore { registry: option::some(registry) };
+        object::publish_object(store);
     }
 
-    // Register a new SPV
+    // Register SPV
     public entry fun register_spv(
         spv: &signer,
-        name: vector<u8>,
-        description: vector<u8>,
-        jurisdiction: vector<u8>,
-        registration_number: vector<u8>,
-        registration_date: u64,
+        name_b: vector<u8>,
+        description_b: vector<u8>,
+        jurisdiction_b: vector<u8>,
+        reg_no_b: vector<u8>,
+        reg_date: u64,
         ctx: &mut TxContext
     ) {
-        let spv_address = signer::address_of(spv);
+        let addr = signer::address_of(spv);
+        let store_ref = object::borrow_global_mut<RegistryStore>(addr);
+        let registry = option::borrow_mut(&mut store_ref.registry);
+        assert!(registry.admin == addr, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(!table::contains(&registry.spvs, addr), error::already_exists(E_SPV_ALREADY_REGISTERED));
 
-        // Get the registry
-        let registry = borrow_registry();
-
-        // Check if the SPV is already registered
-        assert!(!table::contains(&registry.spvs, spv_address), error::already_exists(E_SPV_ALREADY_REGISTERED));
-
-        // Create the SPV info
-        let spv_info = SPVInfo {
+        let info = SPVInfo {
             id: object::new(ctx),
-            address: spv_address,
+            address: addr,
             status: STATUS_PENDING,
-            name: utf8(name),
-            description: utf8(description),
-            jurisdiction: utf8(jurisdiction),
-            registration_number: utf8(registration_number),
-            registration_date: registration_date,
-            last_updated: registration_date,
+            name: utf8(name_b),
+            description: utf8(description_b),
+            jurisdiction: utf8(jurisdiction_b),
+            registration_number: utf8(reg_no_b),
+            registration_date: reg_date,
+            last_updated: reg_date,
             verification_date: 0,
         };
-
-        // Add the SPV to the registry
-        table::add(&mut registry.spvs, spv_address, spv_info);
-        vector::push_back(&mut registry.spv_addresses, spv_address);
+        table::add(&mut registry.spvs, addr, info);
+        vector::push_back(&mut registry.addresses, addr);
     }
 
-    // Approve an SPV
+    // Approve SPV
     public entry fun approve_spv(
         admin: &signer,
-        spv_address: address,
-        verification_date: u64,
-        ctx: &mut TxContext
+        spv_addr: address,
+        verify_date: u64
     ) {
-        // Check if the caller is the admin
-        assert!(signer::address_of(admin) == borrow_registry().admin, error::permission_denied(E_NOT_AUTHORIZED));
+        let addr = signer::address_of(admin);
+        let store_ref = object::borrow_global_mut<RegistryStore>(addr);
+        let registry = option::borrow_mut(&mut store_ref.registry);
+        assert!(registry.admin == addr, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(table::contains(&registry.spvs, spv_addr), error::not_found(E_SPV_NOT_FOUND));
 
-        // Get the registry
-        let registry = borrow_registry();
-
-        // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
-
-        // Get the SPV info
-        let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
-
-        // Update the SPV status
-        spv_info.status = STATUS_APPROVED;
-        spv_info.verification_date = verification_date;
-        spv_info.last_updated = verification_date;
+        let info_ref = table::borrow_mut(&mut registry.spvs, spv_addr);
+        info_ref.status = STATUS_APPROVED;
+        info_ref.verification_date = verify_date;
+        info_ref.last_updated = verify_date;
     }
 
-    // Reject an SPV
+    // Reject SPV
     public entry fun reject_spv(
         admin: &signer,
-        spv_address: address,
-        ctx: &mut TxContext
+        spv_addr: address
     ) {
-        // Check if the caller is the admin
-        assert!(signer::address_of(admin) == borrow_registry().admin, error::permission_denied(E_NOT_AUTHORIZED));
+        let addr = signer::address_of(admin);
+        let store_ref = object::borrow_global_mut<RegistryStore>(addr);
+        let registry = option::borrow_mut(&mut store_ref.registry);
+        assert!(registry.admin == addr, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(table::contains(&registry.spvs, spv_addr), error::not_found(E_SPV_NOT_FOUND));
 
-        // Get the registry
-        let registry = borrow_registry();
-
-        // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
-
-        // Get the SPV info
-        let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
-
-        // Update the SPV status
-        spv_info.status = STATUS_REJECTED;
-        spv_info.last_updated = tx_context::epoch_timestamp_ms(ctx);
+        let info_ref = table::borrow_mut(&mut registry.spvs, spv_addr);
+        info_ref.status = STATUS_REJECTED;
+        info_ref.last_updated = tx_context::epoch_timestamp_ms(ctx);
     }
 
-    // Suspend an SPV
+    // Suspend SPV
     public entry fun suspend_spv(
         admin: &signer,
-        spv_address: address,
-        ctx: &mut TxContext
+        spv_addr: address
     ) {
-        // Check if the caller is the admin
-        assert!(signer::address_of(admin) == borrow_registry().admin, error::permission_denied(E_NOT_AUTHORIZED));
+        let addr = signer::address_of(admin);
+        let store_ref = object::borrow_global_mut<RegistryStore>(addr);
+        let registry = option::borrow_mut(&mut store_ref.registry);
+        assert!(registry.admin == addr, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(table::contains(&registry.spvs, spv_addr), error::not_found(E_SPV_NOT_FOUND));
 
-        // Get the registry
-        let registry = borrow_registry();
-
-        // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
-
-        // Get the SPV info
-        let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
-
-        // Update the SPV status
-        spv_info.status = STATUS_SUSPENDED;
-        spv_info.last_updated = tx_context::epoch_timestamp_ms(ctx);
+        let info_ref = table::borrow_mut(&mut registry.spvs, spv_addr);
+        info_ref.status = STATUS_SUSPENDED;
+        info_ref.last_updated = tx_context::epoch_timestamp_ms(ctx);
     }
 
-    // Update SPV information
-    public entry fun update_spv_info(
-        spv: &signer,
-        name: vector<u8>,
-        description: vector<u8>,
-        jurisdiction: vector<u8>,
-        registration_number: vector<u8>,
-        ctx: &mut TxContext
-    ) {
-        let spv_address = signer::address_of(spv);
-
-        // Get the registry
-        let registry = borrow_registry();
-
-        // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
-
-        // Get the SPV info
-        let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
-
-        // Update the SPV info
-        spv_info.name = utf8(name);
-        spv_info.description = utf8(description);
-        spv_info.jurisdiction = utf8(jurisdiction);
-        spv_info.registration_number = utf8(registration_number);
-        spv_info.last_updated = tx_context::epoch_timestamp_ms(ctx);
+    // View SPV Info
+    public fun get_spv_info(spv_addr: address): SPVInfo {
+        let addr = signer::address_of(&signer::borrow_signer());
+        let store_ref = object::borrow_global<RegistryStore>(addr);
+        let registry = option::borrow(&store_ref.registry);
+        assert!(table::contains(&registry.spvs, spv_addr), error::not_found(E_SPV_NOT_FOUND));
+        table::borrow(&registry.spvs, spv_addr)
     }
 
-    // Check if an SPV is verified
-    public fun is_verified_spv(spv_address: address, registry: &SPVRegistry): bool {
-        if (!table::contains(&registry.spvs, spv_address)) {
-            return false;
-        }
-
-        let spv_info = table::borrow(&registry.spvs, spv_address);
-
-        spv_info.status == STATUS_APPROVED
-    }
-
-    // Get SPV information
-    public fun get_spv_info(
-        registry: &SPVRegistry,
-        spv_address: address
-    ): (String, String, String, String, u64, u64, u64) {
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
-
-        let spv_info = table::borrow(&registry.spvs, spv_address);
-
-        (
-            spv_info.name,
-            spv_info.description,
-            spv_info.jurisdiction,
-            spv_info.registration_number,
-            spv_info.registration_date,
-            spv_info.verification_date,
-            spv_info.status
-        )
-    }
-
-    // Helper function to borrow the registry
-    fun borrow_registry(): &mut SPVRegistry {
-        // In a real implementation, this would use a proper way to get the registry
-        // For testing purposes, we'll use a dummy implementation
-        let dummy_registry = SPVRegistry {
-            id: object::new_for_testing(),
-            admin: @0x1,
-            spvs: table::new_for_testing(),
-            spv_addresses: vector::empty(),
-        };
-
-        &mut dummy_registry
+    // List all SPV addresses
+    public fun list_spvs(): vector<address> {
+        let addr = signer::address_of(&signer::borrow_signer());
+        let store_ref = object::borrow_global<RegistryStore>(addr);
+        let registry = option::borrow(&store_ref.registry);
+        registry.addresses
     }
 }
