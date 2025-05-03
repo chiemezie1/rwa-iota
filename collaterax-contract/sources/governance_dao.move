@@ -1,8 +1,8 @@
 #[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::governance_dao {
     use std::string::{String, utf8};
-    use std::error;
-    use std::signer;
+    use iota::error;
+    use iota::signer;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
