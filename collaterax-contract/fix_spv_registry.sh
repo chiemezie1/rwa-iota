@@ -1,3 +1,30 @@
+#!/bin/bash
+
+# Fix script specifically for spv_registry.move
+# This script addresses the specific issues in the spv_registry.move file
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}=========================================${NC}"
+echo -e "${GREEN}   Fixing spv_registry.move file         ${NC}"
+echo -e "${GREEN}=========================================${NC}"
+echo ""
+
+# Check if the file exists
+if [ ! -f "sources/spv_registry.move" ]; then
+    echo -e "${RED}Error: sources/spv_registry.move not found.${NC}"
+    exit 1
+fi
+
+# Create a backup
+cp sources/spv_registry.move sources/spv_registry.move.bak
+
+# Create a new file with the correct content
+cat > sources/spv_registry.move << 'EOL'
 #[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::spv_registry {
     use std::string::{String, utf8};
@@ -232,3 +259,15 @@ module collaterax::spv_registry {
         abort 0 // This will be replaced in the actual implementation
     }
 }
+EOL
+
+echo -e "${GREEN}Fixed spv_registry.move file${NC}"
+echo -e "The original file has been backed up as sources/spv_registry.move.bak"
+echo ""
+echo -e "${YELLOW}Note: This is a complete rewrite of the file with corrected code.${NC}"
+echo -e "${YELLOW}You will need to implement the borrow_registry() function properly.${NC}"
+echo ""
+echo -e "Next steps:"
+echo -e "1. Review the changes to ensure they're correct"
+echo -e "2. Run ${YELLOW}iota move build${NC} to check if the errors are resolved"
+echo -e "3. If there are still errors, you may need to make manual fixes"

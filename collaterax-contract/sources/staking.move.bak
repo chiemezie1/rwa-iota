@@ -1,13 +1,13 @@
-use std::string::{String, utf8};
-use std::error;
-use std::signer;
-/// Staking Module
-///
-/// This module allows token holders to stake their tokens and earn rewards.
-/// Staking increases platform engagement and provides a passive income stream
-/// for long-term token holders.
+
+#[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::staking {
     use std::string::{String, utf8};
+    use std::error;
+    use std::signer;
+    use std::vector;
+    use iota::object::{Self, UID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::table::{Self, Table};
     use std::vector;
     use std::error;
     use std::signer;
@@ -63,6 +63,7 @@ module collaterax::staking {
     public struct PoolRegistry has key {
         id: UID,
         /// Table mapping asset IDs to their staking pools
+        id: UID,
         id: UID,
         pools: Table<String, StakingPool>,
         /// List of all asset IDs with pools for enumeration
@@ -228,7 +229,7 @@ module collaterax::staking {
         
         // If the stake is now zero, remove it
         if (stake.amount == 0 && stake.pending_rewards == 0) {
-            let Stake { amount: _, staked_at: _, last_reward_time: _, pending_rewards: _ } = table::remove(&mut pool.stakes, staker_address);
+            let Stake { amount: _, staked_at: _, last_reward_time: _, pending_rewards: _ } = let Stake { amount: _, staked_at: _, last_reward_time: _, pending_rewards: _ } = table::remove(&mut pool.stakes, staker_address);
             
             // Remove the staker from the list
             let (found, index) = vector::index_of(&pool.staker_addresses, &staker_address);

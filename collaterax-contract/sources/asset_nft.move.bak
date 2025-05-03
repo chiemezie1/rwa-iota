@@ -1,15 +1,13 @@
-use std::string::{String, utf8};
-use std::error;
-use std::signer;
-/// Asset NFT Module
-///
-/// This module manages the creation and transfer of non-fungible tokens (NFTs)
-/// that represent unique real-world assets like real estate properties.
-///
-/// Only verified SPVs can create new asset NFTs, ensuring that each token
-/// corresponds to a properly verified real-world asset.
+
+#[allow(unused_use, unused_const, duplicate_alias)]
 module collaterax::asset_nft {
     use std::string::{String, utf8};
+    use std::error;
+    use std::signer;
+    use std::vector;
+    use iota::object::{Self, UID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::table::{Self, Table};
     use std::vector;
     use std::error;
     use std::signer;
@@ -59,6 +57,7 @@ module collaterax::asset_nft {
     public struct AssetStore has key {
         id: UID,
         /// Table mapping asset IDs to their NFTs
+        id: UID,
         id: UID,
         assets: Table<String, AssetNFT>,
         /// List of all asset IDs for enumeration
@@ -204,7 +203,7 @@ module collaterax::asset_nft {
         assert!(asset.burnable, error::invalid_argument(E_NOT_BURNABLE));
         
         // Remove the asset from the store
-        let AssetNFT { id,
+        let AssetNFT { id, id,
             id: id,
             asset_id: id,
             asset_type: _,
