@@ -1,7 +1,6 @@
-#[allow(unused_use, unused_const, duplicate_alias)]
+#[allow(unused_use, unused_const, duplicate_alias, unused_variable)]
 module collaterax::asset_ft {
     use std::string::{String, utf8};
-    use std::error;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
@@ -76,12 +75,12 @@ module collaterax::asset_ft {
         let registry = borrow_registry();
 
         // Check if the caller is the admin
-        assert!(admin_address == registry.admin, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(admin_address == registry.admin, E_NOT_AUTHORIZED);
 
         let asset_id_str = utf8(asset_id);
 
         // Check if the token already exists
-        assert!(!table::contains(&registry.tokens, asset_id_str), error::already_exists(E_TOKEN_ALREADY_EXISTS));
+        assert!(!table::contains(&registry.tokens, asset_id_str), E_TOKEN_ALREADY_EXISTS);
 
         // Create the token
         let token = AssetToken {
@@ -113,16 +112,16 @@ module collaterax::asset_ft {
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
-        assert!(amount > 0, error::invalid_argument(E_ZERO_AMOUNT));
+        assert!(amount > 0, E_ZERO_AMOUNT);
 
         // Get the registry
         let registry = borrow_registry();
 
         // Check if the caller is the admin
-        assert!(admin_address == registry.admin, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(admin_address == registry.admin, E_NOT_AUTHORIZED);
 
         // Check if the token exists
-        assert!(table::contains(&registry.tokens, asset_id_str), error::not_found(E_TOKEN_NOT_FOUND));
+        assert!(table::contains(&registry.tokens, asset_id_str), E_TOKEN_NOT_FOUND);
 
         // Get the token
         let token = table::borrow_mut(&mut registry.tokens, asset_id_str);
@@ -145,13 +144,13 @@ module collaterax::asset_ft {
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
-        assert!(amount > 0, error::invalid_argument(E_ZERO_AMOUNT));
+        assert!(amount > 0, E_ZERO_AMOUNT);
 
         // Get the registry
         let registry = borrow_registry();
 
         // Check if the token exists
-        assert!(table::contains(&registry.tokens, asset_id_str), error::not_found(E_TOKEN_NOT_FOUND));
+        assert!(table::contains(&registry.tokens, asset_id_str), E_TOKEN_NOT_FOUND);
 
         // In a real implementation, this would check the sender's balance and transfer tokens
     }
@@ -167,19 +166,19 @@ module collaterax::asset_ft {
         let asset_id_str = utf8(asset_id);
 
         // Ensure the amount is not zero
-        assert!(amount > 0, error::invalid_argument(E_ZERO_AMOUNT));
+        assert!(amount > 0, E_ZERO_AMOUNT);
 
         // Get the registry
         let registry = borrow_registry();
 
         // Check if the token exists
-        assert!(table::contains(&registry.tokens, asset_id_str), error::not_found(E_TOKEN_NOT_FOUND));
+        assert!(table::contains(&registry.tokens, asset_id_str), E_TOKEN_NOT_FOUND);
 
         // Get the token
         let token = table::borrow_mut(&mut registry.tokens, asset_id_str);
 
         // Update the total supply
-        assert!(token.total_supply >= amount, error::invalid_argument(E_INSUFFICIENT_BALANCE));
+        assert!(token.total_supply >= amount, E_INSUFFICIENT_BALANCE);
         token.total_supply = token.total_supply - amount;
 
         // In a real implementation, this would burn tokens from the owner's balance
@@ -193,7 +192,7 @@ module collaterax::asset_ft {
         let asset_id_str = utf8(asset_id);
 
         // Check if the token exists
-        assert!(table::contains(&registry.tokens, asset_id_str), error::not_found(E_TOKEN_NOT_FOUND));
+        assert!(table::contains(&registry.tokens, asset_id_str), E_TOKEN_NOT_FOUND);
 
         // Get the token
         let token = table::borrow(&registry.tokens, asset_id_str);

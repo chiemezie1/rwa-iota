@@ -74,7 +74,7 @@ module collaterax::spv_registry {
         let registry = borrow_registry();
 
         // Check if the SPV is already registered
-        assert!(!table::contains(&registry.spvs, spv_address), error::already_exists(E_SPV_ALREADY_REGISTERED));
+        assert!(!table::contains(&registry.spvs, spv_address), E_SPV_ALREADY_REGISTERED);
 
         // Create the SPV info
         let spv_info = SPVInfo {
@@ -105,10 +105,10 @@ module collaterax::spv_registry {
         let registry = borrow_registry();
 
         // Check if the caller is the admin
-        assert!(tx_context::sender(ctx) == registry.admin, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(tx_context::sender(ctx) == registry.admin, E_NOT_AUTHORIZED);
 
         // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
+        assert!(table::contains(&registry.spvs, spv_address), E_SPV_NOT_FOUND);
 
         // Get the SPV info
         let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
@@ -129,10 +129,10 @@ module collaterax::spv_registry {
         let registry = borrow_registry();
 
         // Check if the caller is the admin
-        assert!(tx_context::sender(ctx) == registry.admin, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(tx_context::sender(ctx) == registry.admin, E_NOT_AUTHORIZED);
 
         // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
+        assert!(table::contains(&registry.spvs, spv_address), E_SPV_NOT_FOUND);
 
         // Get the SPV info
         let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
@@ -152,10 +152,10 @@ module collaterax::spv_registry {
         let registry = borrow_registry();
 
         // Check if the caller is the admin
-        assert!(tx_context::sender(ctx) == registry.admin, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(tx_context::sender(ctx) == registry.admin, E_NOT_AUTHORIZED);
 
         // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
+        assert!(table::contains(&registry.spvs, spv_address), E_SPV_NOT_FOUND);
 
         // Get the SPV info
         let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);
@@ -200,7 +200,7 @@ module collaterax::spv_registry {
         let registry = borrow_registry();
 
         // Check if the SPV exists
-        assert!(table::contains(&registry.spvs, spv_address), error::not_found(E_SPV_NOT_FOUND));
+        assert!(table::contains(&registry.spvs, spv_address), E_SPV_NOT_FOUND);
 
         // Get the SPV info
         let spv_info = table::borrow_mut(&mut registry.spvs, spv_address);

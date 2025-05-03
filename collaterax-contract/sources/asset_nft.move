@@ -1,7 +1,6 @@
-#[allow(unused_use, unused_const, duplicate_alias)]
+#[allow(unused_use, unused_const, duplicate_alias, unused_variable)]
 module collaterax::asset_nft {
     use std::string::{String, utf8};
-    use std::error;
     use std::vector;
     use iota::object::{Self, UID};
     use iota::tx_context::{Self, TxContext};
@@ -74,12 +73,12 @@ module collaterax::asset_nft {
         let store = borrow_store();
 
         // Check if the caller is the admin
-        assert!(store.admin == issuer_address, error::permission_denied(E_NOT_AUTHORIZED));
+        assert!(store.admin == issuer_address, E_NOT_AUTHORIZED);
 
         let asset_id_str = utf8(asset_id);
 
         // Check if the asset already exists
-        assert!(!table::contains(&store.assets, asset_id_str), error::already_exists(E_ASSET_ALREADY_EXISTS));
+        assert!(!table::contains(&store.assets, asset_id_str), E_ASSET_ALREADY_EXISTS);
 
         // Get the current time
         let current_time = tx_context::epoch_timestamp_ms(ctx);
@@ -119,16 +118,16 @@ module collaterax::asset_nft {
         let store = borrow_store();
 
         // Check if the asset exists
-        assert!(table::contains(&store.assets, asset_id_str), error::not_found(E_ASSET_NOT_FOUND));
+        assert!(table::contains(&store.assets, asset_id_str), E_ASSET_NOT_FOUND);
 
         // Get the NFT
         let nft = table::borrow_mut(&mut store.assets, asset_id_str);
 
         // Check if the caller is the owner
-        assert!(nft.owner == owner_address, error::permission_denied(E_NOT_OWNER));
+        assert!(nft.owner == owner_address, E_NOT_OWNER);
 
         // Check if the NFT is transferable
-        assert!(nft.transferable, error::invalid_state(E_NOT_AUTHORIZED));
+        assert!(nft.transferable, E_NOT_AUTHORIZED);
 
         // Update the owner
         nft.owner = recipient;
@@ -148,16 +147,16 @@ module collaterax::asset_nft {
         let store = borrow_store();
 
         // Check if the asset exists
-        assert!(table::contains(&store.assets, asset_id_str), error::not_found(E_ASSET_NOT_FOUND));
+        assert!(table::contains(&store.assets, asset_id_str), E_ASSET_NOT_FOUND);
 
         // Get the NFT
         let nft = table::borrow(&store.assets, asset_id_str);
 
         // Check if the caller is the owner
-        assert!(nft.owner == owner_address, error::permission_denied(E_NOT_OWNER));
+        assert!(nft.owner == owner_address, E_NOT_OWNER);
 
         // Check if the NFT is burnable
-        assert!(nft.burnable, error::invalid_state(E_NOT_BURNABLE));
+        assert!(nft.burnable, E_NOT_BURNABLE);
 
         // Remove the NFT from the store
         let _removed_nft = table::remove(&mut store.assets, asset_id_str);
@@ -173,7 +172,7 @@ module collaterax::asset_nft {
         let asset_id_str = utf8(asset_id);
 
         // Check if the asset exists
-        assert!(table::contains(&store.assets, asset_id_str), error::not_found(E_ASSET_NOT_FOUND));
+        assert!(table::contains(&store.assets, asset_id_str), E_ASSET_NOT_FOUND);
 
         // Get the NFT
         let nft = table::borrow(&store.assets, asset_id_str);
@@ -200,7 +199,7 @@ module collaterax::asset_nft {
         let asset_id_str = utf8(asset_id);
 
         // Check if the asset exists
-        assert!(table::contains(&store.assets, asset_id_str), error::not_found(E_ASSET_NOT_FOUND));
+        assert!(table::contains(&store.assets, asset_id_str), E_ASSET_NOT_FOUND);
 
         // Get the NFT
         let nft = table::borrow(&store.assets, asset_id_str);
